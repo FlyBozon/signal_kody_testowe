@@ -1,0 +1,32 @@
+*.claude
+*build/*
+# ---- Artefakty budowania (make) --------------------------------------------
+build/
+
+# ---- Katalog Debug generowany przez STM32CubeIDE ---------------------------
+# Zawiera pliki .o, .d, .su, .cyclo, .elf, .map, .list
+# makefile i subdir.mk w Debug/ są auto-generowane z .cproject – nie tracisz nic
+Debug/
+
+# ---- Pliki IDE (STM32CubeIDE / Eclipse CDT) --------------------------------
+.cproject
+.project
+.settings/
+*.launch
+.mxproject
+
+# ---- Python ----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# ---- Claude Code (wewnętrzne pliki agenta) ---------------------------------
+.claude/
+
+# ---- System ----------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*~
+*.swp
