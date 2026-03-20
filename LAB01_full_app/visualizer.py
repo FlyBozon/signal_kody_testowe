@@ -44,7 +44,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 # ---------------------------------------------------------------------------
 # Konfiguracja
 # ---------------------------------------------------------------------------
-DEFAULT_PORT   = "/dev/ttyACM0"
+DEFAULT_PORT   = "/dev/ttyACM1"
 DEFAULT_BAUD   = 115200
 SAMPLE_RATE_HZ = 30.0          # Musi zgadzać się z ODR w STM32
 ALPHA          = 0.98           # Waga filtra komplementarnego (gyro vs accel)
@@ -153,7 +153,6 @@ def serial_reader(port, baud):
             print(f"[UART] Oczekiwanie na port {port}... ({e})")
             time.sleep(2)
 
-    sample = {}
     KEYS = {"Ax", "Ay", "Az", "Gx", "Gy", "Gz"}
 
     while True:
@@ -163,38 +162,38 @@ def serial_reader(port, baud):
         except Exception:
             continue
 
-        if line.startswith("-- Sample"):
+        # Format: "Ax=123 Ay=-45 Az=980 Gx=0 Gy=1 Gz=-2"
+        if "=" not in line:
+            continue
+        try:
             sample = {}
-        elif "=" in line:
-            try:
-                key, val = line.split("=", 1)
-                key = key.strip()
-                val = int(val.strip())
-                if key in KEYS:
-                    sample[key] = val
-            except ValueError:
-                pass
+            for token in line.split():
+                if "=" in token:
+                    key, val = token.split("=", 1)
+                    if key in KEYS:
+                        sample[key] = int(val)
+        except ValueError:
+            continue
 
-            if KEYS <= sample.keys():
-                roll, pitch, yaw = filt.update(
-                    sample["Ax"], sample["Ay"], sample["Az"],
-                    sample["Gx"], sample["Gy"], sample["Gz"],
-                )
-                with state.lock:
-                    state.roll  = roll
-                    state.pitch = pitch
-                    state.yaw   = yaw
-                    state.ax.append(sample["Ax"])
-                    state.ay.append(sample["Ay"])
-                    state.az.append(sample["Az"])
-                    state.gx.append(sample["Gx"])
-                    state.gy.append(sample["Gy"])
-                    state.gz.append(sample["Gz"])
-                    state.rolls.append(roll)
-                    state.pitches.append(pitch)
-                    state.yaws.append(yaw)
-                    state.sample_count += 1
-                sample = {}
+        if KEYS <= sample.keys():
+            roll, pitch, yaw = filt.update(
+                sample["Ax"], sample["Ay"], sample["Az"],
+                sample["Gx"], sample["Gy"], sample["Gz"],
+            )
+            with state.lock:
+                state.roll  = roll
+                state.pitch = pitch
+                state.yaw   = yaw
+                state.ax.append(sample["Ax"])
+                state.ay.append(sample["Ay"])
+                state.az.append(sample["Az"])
+                state.gx.append(sample["Gx"])
+                state.gy.append(sample["Gy"])
+                state.gz.append(sample["Gz"])
+                state.rolls.append(roll)
+                state.pitches.append(pitch)
+                state.yaws.append(yaw)
+                state.sample_count += 1
 
 # ---------------------------------------------------------------------------
 # Wątek symulatora (tryb demo bez sprzętu)

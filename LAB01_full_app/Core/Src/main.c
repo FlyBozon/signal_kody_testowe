@@ -282,9 +282,27 @@ void PrintBuffer(float *buffer, uint32_t size)
 
 void Log(void)
 {
+  static const char *labels[] = { "Ax", "Ay", "Az", "Gx", "Gy", "Gz" };
+  IKS4A1_MOTION_SENSOR_Axes_t axes;
+
   ledPeriod = LED_LOG_PERIOD;
-  FillBuffer(input_user_buffer,SIGNAL_SIZE);
-  PrintBuffer(input_user_buffer,SIGNAL_SIZE);
+
+  if (sensorDataReady != RESET)
+  {
+    sensorDataReady = RESET;
+    IKS4A1_MOTION_SENSOR_GetAxes(IKS4A1_LSM6DSV16X_0, MOTION_ACCELERO, &axes);
+    input_user_buffer[0] = (float)axes.x;
+    input_user_buffer[1] = (float)axes.y;
+    input_user_buffer[2] = (float)axes.z;
+    IKS4A1_MOTION_SENSOR_GetAxes(IKS4A1_LSM6DSV16X_0, MOTION_GYRO, &axes);
+    input_user_buffer[3] = (float)axes.x / 1000;
+    input_user_buffer[4] = (float)axes.y / 1000;
+    input_user_buffer[5] = (float)axes.z / 1000;
+
+    for (uint32_t j = 0; j < NEAI_INPUT_AXIS_NUMBER; j++)
+      printf("%s=%d ", labels[j], (int)input_user_buffer[j]);
+    printf("\r\n");
+  }
 }
 
 void Learn(void)
