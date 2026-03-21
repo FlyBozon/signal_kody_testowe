@@ -96,6 +96,7 @@ C_SRCS = \
   Core/Src/system_stm32l4xx.c \
   Core/Src/usart.c \
   Core/Src/spi.c \
+  Core/Src/gps.c \
   Core/Src/user_diskio.c \
   Core/Src/stm32_adafruit_sd.c \
   \
