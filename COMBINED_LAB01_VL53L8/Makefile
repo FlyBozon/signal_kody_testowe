@@ -61,7 +61,8 @@ INCS = \
   -IDrivers/BSP/53L8A1 \
   -IDrivers/BSP/Components/vl53l8cx \
   -IDrivers/BSP/Components/vl53l8cx/modules \
-  -IDrivers/BSP/Components/vl53l8cx/porting
+  -IDrivers/BSP/Components/vl53l8cx/porting \
+  -IMiddlewares/Third_Party/FatFs/src
 
 CFLAGS = $(MCU) -std=gnu11 -g3 -O0 \
   -ffunction-sections -fdata-sections \
@@ -94,6 +95,9 @@ C_SRCS = \
   Core/Src/sysmem.c \
   Core/Src/system_stm32l4xx.c \
   Core/Src/usart.c \
+  Core/Src/spi.c \
+  Core/Src/user_diskio.c \
+  Core/Src/stm32_adafruit_sd.c \
   \
   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c \
   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c \
@@ -112,6 +116,8 @@ C_SRCS = \
   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc_ex.c \
   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart.c \
   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.c \
+  Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi.c \
+  Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi_ex.c \
   \
   Drivers/BSP/IKS4A1/iks4a1_env_sensors.c \
   Drivers/BSP/IKS4A1/iks4a1_env_sensors_ex.c \
@@ -138,7 +144,13 @@ C_SRCS = \
   Drivers/BSP/Components/vl53l8cx/modules/vl53l8cx_plugin_detection_thresholds.c \
   Drivers/BSP/Components/vl53l8cx/modules/vl53l8cx_plugin_motion_indicator.c \
   Drivers/BSP/Components/vl53l8cx/modules/vl53l8cx_plugin_xtalk.c \
-  Drivers/BSP/Components/vl53l8cx/porting/platform.c
+  Drivers/BSP/Components/vl53l8cx/porting/platform.c \
+  \
+  Middlewares/Third_Party/FatFs/src/ff.c \
+  Middlewares/Third_Party/FatFs/src/diskio.c \
+  Middlewares/Third_Party/FatFs/src/ff_gen_drv.c \
+  Middlewares/Third_Party/FatFs/src/option/unicode.c \
+  Middlewares/Third_Party/FatFs/src/option/syscall.c
 
 ASM_SRCS = \
   Core/Startup/startup_stm32l476rgtx.s

@@ -16,6 +16,10 @@
 #include "main.h"
 #include "gpio.h"
 #include "usart.h"
+#include "spi.h"
+#include "ff.h"
+#include "ff_gen_drv.h"
+#include "user_diskio.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -33,6 +37,8 @@ typedef enum { LOG, LEARN, INFERENCE } States_t;
 /* ===========================================================================
  * Stałe
  * ===========================================================================*/
+#define SENSOR_LOGGING_ENABLED 1
+
 #define MEMS_SIGNAL_SIZE                                                       \
   (uint32_t)(NEAI_INPUT_SIGNAL_LENGTH * NEAI_INPUT_AXIS_NUMBER)
 #define LEARNING_ITERATIONS (uint32_t)(20)
@@ -64,6 +70,11 @@ RANGING_SENSOR_Capabilities_t Cap;
 RANGING_SENSOR_ProfileConfig_t Profile;
 uint32_t tofResultCnt = 0;
 
+FATFS SDFatFs;
+FIL MyFile;
+char SDPath[4];
+uint8_t sd_mounted = 0;
+
 /* ===========================================================================
  * Prototypy
  * ===========================================================================*/
@@ -94,9 +105,24 @@ int main(void) {
   SystemClock_Config();
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_SPI2_Init();
 
   /* Wyłączenie buforowania stdout, aby minicom od razu wyrzucał dane */
   setbuf(stdout, NULL);
+
+  /* Link the SD disk I/O driver */
+  if(FATFS_LinkDriver(&SD_Driver, SDPath) == 0)
+  {
+    if(f_mount(&SDFatFs, (TCHAR const*)SDPath, 1) == FR_OK)
+    {
+      sd_mounted = 1;
+      printf("SD Card mounted successfully.\r\n");
+    }
+    else
+    {
+      printf("SD Card mount failed.\r\n");
+    }
+  }
 
   /* Czekamy 3 sekundy na pełną enumerację USB (ST-Linka) aby port dał nam 500mA
    */
@@ -276,6 +302,7 @@ void PrintToFLine(void) {
   if (tofResultCnt <= TOF_SKIP_RESULTS)
     return; /* poczekaj na stabilne dane */
 
+#if SENSOR_LOGGING_ENABLED
   printf("TDIST");
   for (i = 0; i < TOF_RESOLUTION; i++) {
     int d = (int)Result.ZoneResult[i].Distance[0];
@@ -284,11 +311,39 @@ void PrintToFLine(void) {
     printf(" %d", d);
   }
   printf("\r\n");
+#endif
 
+  if (sd_mounted) {
+    if(f_open(&MyFile, "log.txt", FA_OPEN_APPEND | FA_WRITE) == FR_OK) {
+      f_printf(&MyFile, "TDIST");
+      for (i = 0; i < TOF_RESOLUTION; i++) {
+        int d = (int)Result.ZoneResult[i].Distance[0];
+        if (d < 0 || d > (int)DISTANCE_MAX)
+          d = (int)DISTANCE_MAX;
+        f_printf(&MyFile, " %d", d);
+      }
+      f_printf(&MyFile, "\n");
+      f_close(&MyFile);
+    }
+  }
+
+#if SENSOR_LOGGING_ENABLED
   printf("TSIG");
   for (i = 0; i < TOF_RESOLUTION; i++)
     printf(" %d", (int)Result.ZoneResult[i].Signal[0]);
   printf("\r\n");
+#endif
+
+  if (sd_mounted) {
+    if(f_open(&MyFile, "log.txt", FA_OPEN_APPEND | FA_WRITE) == FR_OK) {
+      f_printf(&MyFile, "TSIG");
+      for (i = 0; i < TOF_RESOLUTION; i++) {
+        f_printf(&MyFile, " %d", (int)Result.ZoneResult[i].Signal[0]);
+      }
+      f_printf(&MyFile, "\n");
+      f_close(&MyFile);
+    }
+  }
 }
 
 /* ===========================================================================
@@ -306,10 +361,21 @@ void Log(void) {
     IKS4A1_MOTION_SENSOR_GetAxes(IKS4A1_LSM6DSV16X_0, MOTION_ACCELERO, &acc);
     IKS4A1_MOTION_SENSOR_GetAxes(IKS4A1_LSM6DSV16X_0, MOTION_GYRO, &gyr);
 
+#if SENSOR_LOGGING_ENABLED
     /* Akcelerometr [mg], Żyroskop [dps] */
     printf("MEMS Ax=%d Ay=%d Az=%d Gx=%d Gy=%d Gz=%d\r\n", (int)acc.x,
            (int)acc.y, (int)acc.z, (int)(gyr.x / 1000), (int)(gyr.y / 1000),
            (int)(gyr.z / 1000));
+#endif
+
+    if (sd_mounted) {
+      if(f_open(&MyFile, "log.txt", FA_OPEN_APPEND | FA_WRITE) == FR_OK) {
+        f_printf(&MyFile, "MEMS Ax=%d Ay=%d Az=%d Gx=%d Gy=%d Gz=%d\n", (int)acc.x,
+                 (int)acc.y, (int)acc.z, (int)(gyr.x / 1000), (int)(gyr.y / 1000),
+                 (int)(gyr.z / 1000));
+        f_close(&MyFile);
+      }
+    }
 
     tof_cnt++;
     if (tof_cnt >= MEMS_PER_TOF) {
@@ -360,10 +426,21 @@ void Inference(void) {
     IKS4A1_MOTION_SENSOR_GetAxes(IKS4A1_LSM6DSV16X_0, MOTION_ACCELERO, &acc);
     IKS4A1_MOTION_SENSOR_GetAxes(IKS4A1_LSM6DSV16X_0, MOTION_GYRO, &gyr);
 
+#if SENSOR_LOGGING_ENABLED
     /* Drukuj bieżącą próbkę */
     printf("MEMS Ax=%d Ay=%d Az=%d Gx=%d Gy=%d Gz=%d\r\n", (int)acc.x,
            (int)acc.y, (int)acc.z, (int)(gyr.x / 1000), (int)(gyr.y / 1000),
            (int)(gyr.z / 1000));
+#endif
+
+    if (sd_mounted) {
+      if(f_open(&MyFile, "log.txt", FA_OPEN_APPEND | FA_WRITE) == FR_OK) {
+        f_printf(&MyFile, "MEMS Ax=%d Ay=%d Az=%d Gx=%d Gy=%d Gz=%d\n", (int)acc.x,
+                 (int)acc.y, (int)acc.z, (int)(gyr.x / 1000), (int)(gyr.y / 1000),
+                 (int)(gyr.z / 1000));
+        f_close(&MyFile);
+      }
+    }
 
     /* Akumuluj w buforze NEAI */
     uint32_t idx = buf_cnt * NEAI_INPUT_AXIS_NUMBER;
@@ -382,7 +459,15 @@ void Inference(void) {
       if (st == NEAI_OK) {
         int ok = (sim >= 90) ? 1 : 0;
         ledPeriod = ok ? LED_INFERENCE_PERIOD : LED_ANOMALY_PERIOD;
+#if SENSOR_LOGGING_ENABLED
         printf("NEAI sim=%d ok=%d\r\n", (int)sim, ok);
+#endif
+        if (sd_mounted) {
+          if(f_open(&MyFile, "log.txt", FA_OPEN_APPEND | FA_WRITE) == FR_OK) {
+            f_printf(&MyFile, "NEAI sim=%d ok=%d\n", (int)sim, ok);
+            f_close(&MyFile);
+          }
+        }
       }
     }
 

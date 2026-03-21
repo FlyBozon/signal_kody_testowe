@@ -30,3 +30,5 @@ venv/
 Thumbs.db
 *~
 *.swp
+
+COMBINED_LAB01_VL53L8/Middlewares/Third_Party/FatFs/doc
