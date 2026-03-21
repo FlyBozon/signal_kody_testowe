@@ -66,7 +66,8 @@ LDFLAGS = $(MCU) \
   -Wl,-Map=$(BUILD)/$(TARGET).map \
   -Wl,--gc-sections \
   -static \
-  -Wl,--start-group -lc -lm -Wl,--end-group
+  -Wl,--start-group -lc -lm -Wl,--end-group \
+  -u _printf_float
 
 # ---------------------------------------------------------------------------
 # Pliki źródłowe

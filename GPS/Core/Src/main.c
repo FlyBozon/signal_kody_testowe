@@ -148,6 +148,11 @@ static void GPS_PrintData(void)
         return;
     }
 
+    int lat_int = (int)(g->latitude * 1000000);
+    int lon_int = (int)(g->longitude * 1000000);
+
+    printf("TEST RAW: Lat_int: %d, Lon_int: %d\r\n", lat_int, lon_int);
+
     printf("             Czas:  %02d:%02d:%02d UTC   Data: %02d.%02d.%04d\r\n",
            g->hour, g->minute, g->second,
            g->day, g->month, g->year);
