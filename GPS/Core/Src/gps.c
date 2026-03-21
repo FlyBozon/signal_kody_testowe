@@ -193,11 +193,11 @@ static void gps_parse_line(void)
     if (line_buf[0] != '$') return;
 
     /* Pokaż surowe zdanie NMEA w terminalu */
-    printf("[NMEA] %s\r\n", line_buf);
+    // printf("[NMEA] %s\r\n", line_buf);
 
     if (!nmea_checksum_ok(line_buf)) {
         gps_data.sentences_err++;
-        printf("[NMEA] !!! Zla suma kontrolna: %s\r\n", line_buf);
+        // printf("[NMEA] !!! Zla suma kontrolna: %s\r\n", line_buf);
         return;
     }
 

@@ -76,6 +76,7 @@ C_SRCS = \
   Core/Src/gps.c \
   Core/Src/syscalls.c \
   Core/Src/sysmem.c \
+  Core/Src/stm32l4xx_it.c \
   Core/Src/system_stm32l4xx.c \
   \
   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c \
