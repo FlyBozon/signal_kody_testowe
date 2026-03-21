@@ -230,11 +230,11 @@ void EXTI15_10_IRQHandler(void)
 /* USER CODE BEGIN 1 */
 
 /**
-  * @brief This function handles UART4 global interrupt (GPS).
+  * @brief This function handles USART1 global interrupt (GPS).
   */
-void UART4_IRQHandler(void)
+void USART1_IRQHandler(void)
 {
-  HAL_UART_IRQHandler(&huart4);
+  HAL_UART_IRQHandler(&huart1);
 }
 
 /* USER CODE END 1 */

@@ -36,7 +36,7 @@ static uint8_t line_pos = 0;
 static bool    in_sentence = false;
 
 /* Bajt odbierany przez przerwanie */
-static uint8_t rx_byte;
+uint8_t rx_byte;  /* nie-static: potrzebny w HAL_UART_ErrorCallback (main.c) */
 
 /* Dane GPS – dostępne dla użytkownika */
 static GPS_Data_t gps_data;
@@ -236,7 +236,7 @@ void GPS_Init(void)
     in_sentence = false;
 
     /* Start odbioru pierwszego bajtu przez przerwanie */
-    HAL_UART_Receive_IT(&huart4, &rx_byte, 1);
+    HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
 }
 
 /**
@@ -250,7 +250,7 @@ void GPS_UART_RxCallback(void)
         rx_write = next;
     }
     /* Uruchom następny odbiór */
-    HAL_UART_Receive_IT(&huart4, &rx_byte, 1);
+    HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
 }
 
 void GPS_Process(void)

@@ -94,6 +94,6 @@ bool GPS_IsValid(void);
 void GPS_UART_RxCallback(void);
 
 /* Eksportowany uchwyt UART – do użycia w main.c */
-extern UART_HandleTypeDef huart4;
+extern UART_HandleTypeDef huart1;
 
 #endif /* GPS_H */

@@ -72,7 +72,15 @@ static DSTATUS SD_CheckStatus(BYTE lun)
   */
 DSTATUS SD_initialize(BYTE lun)
 {
-  return SD_CheckStatus(lun);
+  Stat = STA_NOINIT;
+
+  /* Configure the SD Card */
+  if(BSP_SD_Init() == MSD_OK)
+  {
+    Stat &= ~STA_NOINIT;
+  }
+
+  return Stat;
 }
 
 /**

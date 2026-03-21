@@ -125,7 +125,7 @@ int main(void) {
   SystemClock_Config();
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  MX_UART4_Init();
+  MX_USART1_UART_Init();
   MX_SPI2_Init();
 
   /* Wyłączenie buforowania stdout, aby minicom od razu wyrzucał dane */
@@ -161,7 +161,7 @@ int main(void) {
   printf("MEMS_Init done\r\n");
 
   GPS_Init();
-  printf("GPS_Init done (UART4 PA1=RX, 9600 baud)\r\n");
+  printf("GPS_Init done (USART1 PA10=RX, 9600 baud)\r\n");
 
   enum neai_state neai_err = neai_anomalydetection_init(use_pretrained);
   if (neai_err != NEAI_OK) {
@@ -594,8 +594,24 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  * Callback UART – przerwanie po odebraniu bajtu (GPS na UART4)
  * ===========================================================================*/
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-  if (huart->Instance == UART4)
+  if (huart->Instance == USART1)
     GPS_UART_RxCallback();
+}
+
+/* ===========================================================================
+ * ErrorCallback UART – wznowienie odbioru po błędzie (overrun, framing itp.)
+ * Bez tego HAL zatrzymuje Receive_IT na zawsze po pierwszym błędzie.
+ * ===========================================================================*/
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+  if (huart->Instance == USART1) {
+    /* Wyczyść flagi błędów i wznów nasłuchiwanie */
+    __HAL_UART_CLEAR_OREFLAG(huart);
+    __HAL_UART_CLEAR_FEFLAG(huart);
+    __HAL_UART_CLEAR_NEFLAG(huart);
+    __HAL_UART_CLEAR_PEFLAG(huart);
+    extern uint8_t rx_byte;
+    HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
+  }
 }
 
 /* ===========================================================================
@@ -700,7 +716,7 @@ void GPS_PrintAndLog(void) {
 
   if (g->sentences_ok == 0 && g->sentences_err == 0) {
     if (!gps_time_synced)
-      printf("[STATUS] GPS brak danych – sprawdz PA1\r\n");
+      printf("[STATUS] GPS brak danych – sprawdz PA10\r\n");
     return;
   }
 
