@@ -1,5 +1,7 @@
 # signal_kody_testowe
 
+## kod do testów przed hackathonem SignAI
+
 do odpalenia kodu potrzebujecie zainstalować kompilator (instrukcja się znajduje na tym repo https://github.com/MrQlek/meteo-station)
 
 potem wejść do odpowiedniego foldreru
